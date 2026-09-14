@@ -1,6 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { RAGRetrievalService } from './rag-retrieval.service';
 import { LLMGatewayService } from './llm-gateway.service';
+import { AICostGovernorService } from './ai-cost-governor.service';
 
 export interface AskAIResponse {
   question: string;
@@ -16,6 +17,7 @@ export class AskAIService {
   constructor(
     private readonly ragRetrieval: RAGRetrievalService,
     private readonly llmGateway: LLMGatewayService,
+    @Optional() private readonly costGovernor?: AICostGovernorService,
   ) {}
 
   /**
@@ -23,6 +25,11 @@ export class AskAIService {
    */
   async askAI(workspaceId: string, userId: string, question: string): Promise<AskAIResponse> {
     this.logger.log(`Processing /ask-ai question for user ${userId}: "${question}"`);
+
+    // 0. Check & Consume AI Cost Governor Budget
+    if (this.costGovernor) {
+      await this.costGovernor.checkAndConsumeBudget(workspaceId, userId, 'ask_ai', 300, 2);
+    }
 
     // 1. Tenant-scoped hybrid retrieval
     const retrievedContexts = await this.ragRetrieval.hybridSearch(workspaceId, question, 3);

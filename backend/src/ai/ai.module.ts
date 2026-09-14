@@ -4,6 +4,9 @@ import { LLMGatewayService } from './llm-gateway.service';
 import { VectorStoreService } from './vector-store.service';
 import { RAGRetrievalService } from './rag-retrieval.service';
 import { AskAIService } from './ask-ai.service';
+import { AISummarizationService } from './ai-summarization.service';
+import { AIComposeAssistantService } from './ai-compose-assistant.service';
+import { AICostGovernorService } from './ai-cost-governor.service';
 import { ClaudeLLMProvider } from './providers/claude-llm.provider';
 import { OpenAILLMProvider } from './providers/openai-llm.provider';
 import { MockLiteLLMProvider } from './providers/mock-litellm.provider';
@@ -28,8 +31,19 @@ import { OpenSearchModule } from '../opensearch/opensearch.module';
     LLMGatewayService,
     VectorStoreService,
     RAGRetrievalService,
+    AICostGovernorService,
     AskAIService,
+    AISummarizationService,
+    AIComposeAssistantService,
   ],
-  exports: [LLMGatewayService, VectorStoreService, RAGRetrievalService, AskAIService],
+  exports: [
+    LLMGatewayService,
+    VectorStoreService,
+    RAGRetrievalService,
+    AICostGovernorService,
+    AskAIService,
+    AISummarizationService,
+    AIComposeAssistantService,
+  ],
 })
 export class AIModule {}
