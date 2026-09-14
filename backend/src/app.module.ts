@@ -7,6 +7,8 @@ import { MessageModule } from './message/message.module';
 import { GatewayModule } from './gateway/gateway.module';
 import { PresenceModule } from './presence/presence.module';
 import { StorageModule } from './storage/storage.module';
+import { UserGroupModule } from './user-group/user-group.module';
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
@@ -18,6 +20,8 @@ import { StorageModule } from './storage/storage.module';
     GatewayModule,
     PresenceModule,
     StorageModule,
+    UserGroupModule,
+    NotificationModule,
   ],
 })
 export class AppModule {}
