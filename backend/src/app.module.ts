@@ -9,6 +9,10 @@ import { PresenceModule } from './presence/presence.module';
 import { StorageModule } from './storage/storage.module';
 import { UserGroupModule } from './user-group/user-group.module';
 import { NotificationModule } from './notification/notification.module';
+import { OpenSearchModule } from './opensearch/opensearch.module';
+import { WebhookModule } from './webhook/webhook.module';
+import { CommandModule } from './command/command.module';
+import { WorkflowModule } from './workflow/workflow.module';
 
 @Module({
   imports: [
@@ -22,6 +26,10 @@ import { NotificationModule } from './notification/notification.module';
     StorageModule,
     UserGroupModule,
     NotificationModule,
+    OpenSearchModule,
+    WebhookModule,
+    CommandModule,
+    WorkflowModule,
   ],
 })
 export class AppModule {}
