@@ -4,21 +4,26 @@ import { CommandController } from './command.controller';
 import { TopicCommandStrategy } from './strategies/topic-command.strategy';
 import { RemindCommandStrategy } from './strategies/remind-command.strategy';
 import { InviteCommandStrategy } from './strategies/invite-command.strategy';
+import { AskAICommandStrategy } from './strategies/ask-ai-command.strategy';
+import { AIModule } from '../ai/ai.module';
 
 @Module({
+  imports: [AIModule],
   controllers: [CommandController],
   providers: [
     TopicCommandStrategy,
     RemindCommandStrategy,
     InviteCommandStrategy,
+    AskAICommandStrategy,
     {
       provide: 'SLASH_COMMAND_HANDLERS',
       useFactory: (
         topic: TopicCommandStrategy,
         remind: RemindCommandStrategy,
         invite: InviteCommandStrategy,
-      ) => [topic, remind, invite],
-      inject: [TopicCommandStrategy, RemindCommandStrategy, InviteCommandStrategy],
+        askAI: AskAICommandStrategy,
+      ) => [topic, remind, invite, askAI],
+      inject: [TopicCommandStrategy, RemindCommandStrategy, InviteCommandStrategy, AskAICommandStrategy],
     },
     CommandService,
   ],

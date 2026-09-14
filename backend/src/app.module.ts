@@ -13,6 +13,7 @@ import { OpenSearchModule } from './opensearch/opensearch.module';
 import { WebhookModule } from './webhook/webhook.module';
 import { CommandModule } from './command/command.module';
 import { WorkflowModule } from './workflow/workflow.module';
+import { AIModule } from './ai/ai.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { WorkflowModule } from './workflow/workflow.module';
     WebhookModule,
     CommandModule,
     WorkflowModule,
+    AIModule,
   ],
 })
 export class AppModule {}
