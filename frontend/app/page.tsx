@@ -13,9 +13,10 @@ import { DataResidencyPanel } from "./components/enterprise/data-residency-panel
 import { TenantGraduationPanel } from "./components/enterprise/tenant-graduation-panel";
 import { DisasterRecoveryPanel } from "./components/enterprise/disaster-recovery-panel";
 import { DeveloperPortal } from "./components/developer/developer-portal";
+import { MobileViewPanel } from "./components/mobile/mobile-view";
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<"collaboration" | "enterprise" | "developer">("developer");
+  const [activeTab, setActiveTab] = useState<"collaboration" | "enterprise" | "developer" | "mobile">("mobile");
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [createdTasks, setCreatedTasks] = useState<Array<{ provider: string; key: string; title: string }>>([
     { provider: "jira", key: "NEXUS-104", title: "Review WebRTC SFU Media Gateway latency metrics" },
@@ -33,6 +34,21 @@ export default function Home() {
 
         {/* Tab Navigation */}
         <div style={{ display: "flex", justifyContent: "center", gap: "12px", flexWrap: "wrap" }}>
+          <button
+            onClick={() => setActiveTab("mobile")}
+            style={{
+              padding: "10px 20px",
+              borderRadius: "8px",
+              border: "none",
+              backgroundColor: activeTab === "mobile" ? "#2563eb" : "#1f2937",
+              color: "#ffffff",
+              fontWeight: 700,
+              fontSize: "14px",
+              cursor: "pointer",
+            }}
+          >
+            📱 Mobile App View
+          </button>
           <button
             onClick={() => setActiveTab("developer")}
             style={{
@@ -82,7 +98,10 @@ export default function Home() {
       </header>
 
       <main style={{ maxWidth: "960px", margin: "0 auto" }}>
-        {activeTab === "developer" ? (
+        {activeTab === "mobile" ? (
+          /* Mobile Simulator View */
+          <MobileViewPanel />
+        ) : activeTab === "developer" ? (
           /* Phase 6: Developer Platform & Infrastructure Cost Optimization Dashboard */
           <DeveloperPortal />
         ) : activeTab === "enterprise" ? (

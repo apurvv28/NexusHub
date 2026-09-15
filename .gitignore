@@ -36,3 +36,5 @@ out
 *.tfstate
 *.tfstate.backup
 .terraform.lock.hcl
+
+.expo/
