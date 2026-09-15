@@ -22,6 +22,8 @@ import { AuditComplianceModule } from './audit-compliance/audit-compliance.modul
 import { DataResidencyModule } from './data-residency/data-residency.module';
 import { TenantGraduationModule } from './tenant-graduation/tenant-graduation.module';
 import { DisasterRecoveryModule } from './disaster-recovery/disaster-recovery.module';
+import { WSShardingModule } from './ws-sharding/ws-sharding.module';
+import { MobilePushModule } from './mobile-push/mobile-push.module';
 
 @Module({
   imports: [
@@ -48,6 +50,8 @@ import { DisasterRecoveryModule } from './disaster-recovery/disaster-recovery.mo
     DataResidencyModule,
     TenantGraduationModule,
     DisasterRecoveryModule,
+    WSShardingModule,
+    MobilePushModule,
   ],
 })
 export class AppModule {}

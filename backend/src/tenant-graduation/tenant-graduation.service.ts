@@ -53,8 +53,8 @@ export class TenantGraduationService {
    */
   async executeGraduationSaga(workspaceId: string, sampleDataRowsCount: number = 2500): Promise<GraduationProgress> {
     const existing = this.graduationMap.get(workspaceId);
-    if (existing && existing.step !== 'idle' && existing.step !== 'completed') {
-      throw new BadRequestException(`Graduation already in progress for workspace ${workspaceId} at step '${existing.step}'`);
+    if (existing && existing.step !== 'idle') {
+      throw new BadRequestException(`Graduation already in progress or completed for workspace ${workspaceId} (current state: '${existing.step}')`);
     }
 
     const progress: GraduationProgress = {
