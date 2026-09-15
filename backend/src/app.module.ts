@@ -17,6 +17,8 @@ import { AIModule } from './ai/ai.module';
 import { HuddleModule } from './huddle/huddle.module';
 import { CalendarModule } from './calendar/calendar.module';
 import { TaskIntegrationModule } from './task-integration/task-integration.module';
+import { EnterpriseSSOModule } from './enterprise-sso/enterprise-sso.module';
+import { AuditComplianceModule } from './audit-compliance/audit-compliance.module';
 
 @Module({
   imports: [
@@ -38,6 +40,8 @@ import { TaskIntegrationModule } from './task-integration/task-integration.modul
     HuddleModule,
     CalendarModule,
     TaskIntegrationModule,
+    EnterpriseSSOModule,
+    AuditComplianceModule,
   ],
 })
 export class AppModule {}
