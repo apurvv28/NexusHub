@@ -19,6 +19,9 @@ import { CalendarModule } from './calendar/calendar.module';
 import { TaskIntegrationModule } from './task-integration/task-integration.module';
 import { EnterpriseSSOModule } from './enterprise-sso/enterprise-sso.module';
 import { AuditComplianceModule } from './audit-compliance/audit-compliance.module';
+import { DataResidencyModule } from './data-residency/data-residency.module';
+import { TenantGraduationModule } from './tenant-graduation/tenant-graduation.module';
+import { DisasterRecoveryModule } from './disaster-recovery/disaster-recovery.module';
 
 @Module({
   imports: [
@@ -42,6 +45,9 @@ import { AuditComplianceModule } from './audit-compliance/audit-compliance.modul
     TaskIntegrationModule,
     EnterpriseSSOModule,
     AuditComplianceModule,
+    DataResidencyModule,
+    TenantGraduationModule,
+    DisasterRecoveryModule,
   ],
 })
 export class AppModule {}

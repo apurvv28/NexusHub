@@ -7,7 +7,7 @@
     "build": "tsc",
     "start": "node dist/main.js",
     "start:dev": "ts-node src/main.ts",
-    "test": "ts-node test/tenant-isolation.spec.ts && ts-node test/tenant-provisioning-saga.spec.ts && ts-node test/observability.spec.ts && ts-node test/messaging-gateway.spec.ts && ts-node test/presence-typing.spec.ts && ts-node test/storage-search.spec.ts && ts-node test/rbac-user-groups.spec.ts && ts-node test/notification-engine.spec.ts && ts-node test/opensearch.spec.ts && ts-node test/integrations-workflows.spec.ts && ts-node test/llm-gateway-vector.spec.ts && ts-node test/rag-ask-ai.spec.ts && ts-node test/ai-summarization-compose.spec.ts && ts-node test/ai-cost-governor.spec.ts && ts-node test/webrtc-huddle-transcription.spec.ts && ts-node test/scheduled-reminders-calendar-tasks.spec.ts && ts-node test/enterprise-sso-scim-compliance.spec.ts"
+    "test": "ts-node test/tenant-isolation.spec.ts && ts-node test/tenant-provisioning-saga.spec.ts && ts-node test/observability.spec.ts && ts-node test/messaging-gateway.spec.ts && ts-node test/presence-typing.spec.ts && ts-node test/storage-search.spec.ts && ts-node test/rbac-user-groups.spec.ts && ts-node test/notification-engine.spec.ts && ts-node test/opensearch.spec.ts && ts-node test/integrations-workflows.spec.ts && ts-node test/llm-gateway-vector.spec.ts && ts-node test/rag-ask-ai.spec.ts && ts-node test/ai-summarization-compose.spec.ts && ts-node test/ai-cost-governor.spec.ts && ts-node test/webrtc-huddle-transcription.spec.ts && ts-node test/scheduled-reminders-calendar-tasks.spec.ts && ts-node test/enterprise-sso-scim-compliance.spec.ts && ts-node test/data-residency-graduation-dr.spec.ts"
   },
   "keywords": [
     "nexushub",

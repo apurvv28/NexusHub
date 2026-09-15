@@ -9,6 +9,9 @@ import { SSOConfigPanel } from "./components/enterprise/sso-config-panel";
 import { SCIMTokenPanel } from "./components/enterprise/scim-token-panel";
 import { AuditLogViewer } from "./components/enterprise/audit-log-viewer";
 import { RetentionPolicyPanel } from "./components/enterprise/retention-policy-panel";
+import { DataResidencyPanel } from "./components/enterprise/data-residency-panel";
+import { TenantGraduationPanel } from "./components/enterprise/tenant-graduation-panel";
+import { DisasterRecoveryPanel } from "./components/enterprise/disaster-recovery-panel";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"collaboration" | "enterprise">("enterprise");
@@ -71,6 +74,9 @@ export default function Home() {
               <SCIMTokenPanel />
             </div>
 
+            <DataResidencyPanel />
+            <TenantGraduationPanel />
+            <DisasterRecoveryPanel />
             <RetentionPolicyPanel />
             <AuditLogViewer />
           </div>
