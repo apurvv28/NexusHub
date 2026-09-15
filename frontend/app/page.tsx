@@ -12,9 +12,10 @@ import { RetentionPolicyPanel } from "./components/enterprise/retention-policy-p
 import { DataResidencyPanel } from "./components/enterprise/data-residency-panel";
 import { TenantGraduationPanel } from "./components/enterprise/tenant-graduation-panel";
 import { DisasterRecoveryPanel } from "./components/enterprise/disaster-recovery-panel";
+import { DeveloperPortal } from "./components/developer/developer-portal";
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<"collaboration" | "enterprise">("enterprise");
+  const [activeTab, setActiveTab] = useState<"collaboration" | "enterprise" | "developer">("developer");
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [createdTasks, setCreatedTasks] = useState<Array<{ provider: string; key: string; title: string }>>([
     { provider: "jira", key: "NEXUS-104", title: "Review WebRTC SFU Media Gateway latency metrics" },
@@ -27,11 +28,26 @@ export default function Home() {
           NexusHub — Enterprise Platform
         </h1>
         <p style={{ color: "#a1a1aa", fontSize: "14px", margin: "0 0 20px 0" }}>
-          Real-Time Voice/Video Huddles, SAML/OIDC SSO, SCIM 2.0, SIEM Audit Logging & Compliance Governance
+          Real-Time Voice/Video Huddles, SAML/OIDC SSO, SCIM 2.0, SIEM Audit Logging & Developer Platform
         </p>
 
         {/* Tab Navigation */}
-        <div style={{ display: "flex", justifyContent: "center", gap: "12px" }}>
+        <div style={{ display: "flex", justifyContent: "center", gap: "12px", flexWrap: "wrap" }}>
+          <button
+            onClick={() => setActiveTab("developer")}
+            style={{
+              padding: "10px 20px",
+              borderRadius: "8px",
+              border: "none",
+              backgroundColor: activeTab === "developer" ? "#2563eb" : "#1f2937",
+              color: "#ffffff",
+              fontWeight: 700,
+              fontSize: "14px",
+              cursor: "pointer",
+            }}
+          >
+            🛠️ Phase 6: Developer Platform & Cost Optimization
+          </button>
           <button
             onClick={() => setActiveTab("enterprise")}
             style={{
@@ -66,7 +82,10 @@ export default function Home() {
       </header>
 
       <main style={{ maxWidth: "960px", margin: "0 auto" }}>
-        {activeTab === "enterprise" ? (
+        {activeTab === "developer" ? (
+          /* Phase 6: Developer Platform & Infrastructure Cost Optimization Dashboard */
+          <DeveloperPortal />
+        ) : activeTab === "enterprise" ? (
           /* Phase 5: Enterprise Readiness & Compliance Dashboard */
           <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(440px, 1fr))", gap: "20px" }}>

@@ -24,6 +24,8 @@ import { TenantGraduationModule } from './tenant-graduation/tenant-graduation.mo
 import { DisasterRecoveryModule } from './disaster-recovery/disaster-recovery.module';
 import { WSShardingModule } from './ws-sharding/ws-sharding.module';
 import { MobilePushModule } from './mobile-push/mobile-push.module';
+import { DeveloperPlatformModule } from './developer-platform/developer-platform.module';
+import { CostOptimizerModule } from './cost-optimizer/cost-optimizer.module';
 
 @Module({
   imports: [
@@ -52,6 +54,8 @@ import { MobilePushModule } from './mobile-push/mobile-push.module';
     DisasterRecoveryModule,
     WSShardingModule,
     MobilePushModule,
+    DeveloperPlatformModule,
+    CostOptimizerModule,
   ],
 })
 export class AppModule {}
