@@ -8,6 +8,7 @@ import { WebhookService } from '../src/webhook/webhook.service';
 import { CommandService } from '../src/command/command.service';
 import { TopicCommandStrategy } from '../src/command/strategies/topic-command.strategy';
 import { RemindCommandStrategy } from '../src/command/strategies/remind-command.strategy';
+import { RemindersService } from '../src/command/reminders.service';
 import { InviteCommandStrategy } from '../src/command/strategies/invite-command.strategy';
 import { WorkflowService } from '../src/workflow/workflow.service';
 
@@ -129,7 +130,8 @@ async function runIntegrationsAndWorkflowsTests() {
 
     // TEST 3: Slash Commands Engine Strategy Routing
     const topicStrategy = new TopicCommandStrategy(dbService);
-    const remindStrategy = new RemindCommandStrategy(dbService);
+    const remindersService = new RemindersService();
+    const remindStrategy = new RemindCommandStrategy(remindersService);
     const inviteStrategy = new InviteCommandStrategy(dbService);
     const commandService = new CommandService([topicStrategy, remindStrategy, inviteStrategy]);
 

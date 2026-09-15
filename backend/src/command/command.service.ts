@@ -27,7 +27,9 @@ export class CommandService {
     const commandName = parts[0].toLowerCase();
     const args = parts.slice(1);
 
-    const handler = this.handlers.find((h) => h.commandName.toLowerCase() === commandName);
+    const handler = this.handlers.find(
+      (h) => h.commandName.replace(/^\//, '').toLowerCase() === commandName,
+    );
 
     if (!handler) {
       return {

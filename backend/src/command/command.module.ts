@@ -5,12 +5,14 @@ import { TopicCommandStrategy } from './strategies/topic-command.strategy';
 import { RemindCommandStrategy } from './strategies/remind-command.strategy';
 import { InviteCommandStrategy } from './strategies/invite-command.strategy';
 import { AskAICommandStrategy } from './strategies/ask-ai-command.strategy';
+import { RemindersService } from './reminders.service';
 import { AIModule } from '../ai/ai.module';
 
 @Module({
   imports: [AIModule],
   controllers: [CommandController],
   providers: [
+    RemindersService,
     TopicCommandStrategy,
     RemindCommandStrategy,
     InviteCommandStrategy,
@@ -27,6 +29,6 @@ import { AIModule } from '../ai/ai.module';
     },
     CommandService,
   ],
-  exports: [CommandService],
+  exports: [CommandService, RemindersService],
 })
 export class CommandModule {}

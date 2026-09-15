@@ -1,69 +1,128 @@
-import Image from "next/image";
+"use client";
+
+import React, { useState } from "react";
+import { HuddleRoom } from "./components/huddle/huddle-room";
+import { CalendarEventWidget } from "./components/calendar/calendar-event-widget";
+import { ConvertToTaskModal } from "./components/tasks/convert-to-task-modal";
+import { ScheduledMessagesPanel } from "./components/messages/scheduled-messages-panel";
 
 export default function Home() {
+  const [showTaskModal, setShowTaskModal] = useState(false);
+  const [createdTasks, setCreatedTasks] = useState<Array<{ provider: string; key: string; title: string }>>([
+    { provider: "jira", key: "NEXUS-104", title: "Review WebRTC SFU Media Gateway latency metrics" },
+  ]);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
+    <div style={{ backgroundColor: "#000000", minHeight: "100vh", padding: "32px 16px", color: "#f4f4f5", fontFamily: "system-ui, sans-serif" }}>
+      <header style={{ textAlign: "center", marginBottom: "32px" }}>
+        <h1 style={{ fontSize: "28px", fontWeight: "800", color: "#ffffff", margin: "0 0 8px 0" }}>
+          NexusHub — Phase 4 Collaboration Hub
+        </h1>
+        <p style={{ color: "#a1a1aa", fontSize: "14px", margin: 0 }}>
+          WebRTC Huddles, Speech Transcription, Scheduled Messages, Calendar RSVPs & Task Integrations
+        </p>
+      </header>
+
+      <main style={{ maxWidth: "900px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "32px" }}>
+        {/* Section 1: WebRTC Audio/Video Huddle */}
+        <section>
+          <HuddleRoom
+            huddleId="huddle_demo_1"
+            workspaceId="ws_nexus_corp"
+            channelId="channel_eng_general"
+            channelName="engineering-general"
+            currentUserId="user_dev_host"
+            currentUserName="You (Software Engineer)"
+          />
+        </section>
+
+        {/* Section 2: In-Channel Calendar Event Widget & Scheduled Messages */}
+        <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))", gap: "20px" }}>
+          <div>
+            <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#e4e4e7", marginBottom: "12px" }}>
+              📅 Channel Calendar RSVP Widget
+            </h3>
+            <CalendarEventWidget
+              id="event_1"
+              title="Phase 4 Architecture & Integration Demo Sync"
+              timeRange="Today, 4:00 PM - 5:00 PM"
+              location="Nexus Huddle Room"
+              organizer="Alex Rivers"
+              provider="google"
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+          </div>
+
+          <div>
+            <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#e4e4e7", marginBottom: "12px" }}>
+              ⏱️ Scheduled Messages Engine
+            </h3>
+            <ScheduledMessagesPanel />
+          </div>
+        </section>
+
+        {/* Section 3: Convert Message to Task Integration */}
+        <section style={{ backgroundColor: "#111827", padding: "20px", borderRadius: "12px", border: "1px solid #1f2937" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+            <h3 style={{ fontSize: "16px", fontWeight: 700, margin: 0 }}>
+              📌 Convert Message to Task (Jira / Linear / Native)
+            </h3>
+            <button
+              onClick={() => setShowTaskModal(true)}
+              style={{
+                backgroundColor: "#2563eb",
+                color: "#ffffff",
+                border: "none",
+                padding: "8px 16px",
+                borderRadius: "6px",
+                fontSize: "13px",
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              ➕ Convert Sample Message to Task
+            </button>
+          </div>
+
+          {/* Sample Channel Message Card */}
+          <div style={{ backgroundColor: "#1f2937", padding: "14px", borderRadius: "8px", border: "1px solid #374151", marginBottom: "16px" }}>
+            <div style={{ fontSize: "12px", color: "#9ca3af", marginBottom: "4px" }}>
+              <strong>Alex Rivers</strong> in #engineering-general:
+            </div>
+            <p style={{ margin: 0, fontSize: "14px", color: "#e5e7eb" }}>
+              "Please review the PR for `/remind` natural language parser and scheduled message delivery worker."
+            </p>
+          </div>
+
+          {/* List of Converted Tasks */}
+          <div>
+            <div style={{ fontSize: "13px", color: "#9ca3af", fontWeight: 600, marginBottom: "8px" }}>
+              Converted Tasks Tracker ({createdTasks.length})
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              {createdTasks.map((t, idx) => (
+                <div key={idx} style={{ backgroundColor: "#09090b", padding: "10px 14px", borderRadius: "6px", border: "1px solid #27272a", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: "13px" }}>
+                    <strong style={{ color: "#60a5fa" }}>[{t.key}]</strong> {t.title}
+                  </span>
+                  <span style={{ backgroundColor: "#312e81", color: "#c7d2fe", fontSize: "11px", fontWeight: 700, padding: "2px 8px", borderRadius: "4px", textTransform: "uppercase" }}>
+                    {t.provider}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
       </main>
+
+      {/* Convert to Task Modal */}
+      {showTaskModal && (
+        <ConvertToTaskModal
+          messageId="msg_alex_pr_review"
+          initialContent="Review the PR for /remind natural language parser and scheduled message delivery worker"
+          onClose={() => setShowTaskModal(false)}
+          onTaskCreated={(newTask) => setCreatedTasks((prev) => [...prev, newTask])}
+        />
+      )}
     </div>
   );
 }

@@ -14,6 +14,9 @@ import { WebhookModule } from './webhook/webhook.module';
 import { CommandModule } from './command/command.module';
 import { WorkflowModule } from './workflow/workflow.module';
 import { AIModule } from './ai/ai.module';
+import { HuddleModule } from './huddle/huddle.module';
+import { CalendarModule } from './calendar/calendar.module';
+import { TaskIntegrationModule } from './task-integration/task-integration.module';
 
 @Module({
   imports: [
@@ -32,6 +35,9 @@ import { AIModule } from './ai/ai.module';
     CommandModule,
     WorkflowModule,
     AIModule,
+    HuddleModule,
+    CalendarModule,
+    TaskIntegrationModule,
   ],
 })
 export class AppModule {}
