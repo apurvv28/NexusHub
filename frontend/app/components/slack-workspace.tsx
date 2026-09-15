@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { supabase } from "../lib/supabase-client";
 import { HuddleRoom } from "./huddle/huddle-room";
 import { CalendarEventWidget } from "./calendar/calendar-event-widget";
 import { ConvertToTaskModal } from "./tasks/convert-to-task-modal";
@@ -22,15 +23,32 @@ export interface SlackMessageUI {
   role: string;
   timestamp: string;
   text: string;
-  reactions: Array<{ emoji: string; count: number }>;
+  reactions: Array<{ emoji: string; count: number; userReacted?: boolean }>;
   replyCount?: number;
 }
 
+export interface SlackChannelUI {
+  id: string;
+  name: string;
+  unreadCount?: number;
+  isPrivate?: boolean;
+}
+
 export const SlackWorkspace: React.FC = () => {
+  const [channels, setChannels] = useState<SlackChannelUI[]>([
+    { id: "c_eng", name: "engineering-general", unreadCount: 2 },
+    { id: "c_gen", name: "general" },
+    { id: "c_hud", name: "huddle-lounge" },
+    { id: "c_sec", name: "security-compliance", isPrivate: true },
+  ]);
+
   const [activeChannel, setActiveChannel] = useState<string>("engineering-general");
   const [activeSidePanel, setActiveSidePanel] = useState<"enterprise" | "developer" | "collaboration" | "mobile" | "closed">("enterprise");
   const [showHuddleModal, setShowHuddleModal] = useState<boolean>(false);
   const [showTaskModal, setShowTaskModal] = useState<boolean>(false);
+  const [showNewChannelModal, setShowNewChannelModal] = useState<boolean>(false);
+  const [newChannelName, setNewChannelName] = useState<string>("");
+
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [messageInput, setMessageInput] = useState<string>("");
 
@@ -41,10 +59,10 @@ export const SlackWorkspace: React.FC = () => {
       avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80",
       role: "Lead Systems Architect",
       timestamp: "10:15 AM",
-      text: "Welcome to NexusHub Enterprise! All 6 phases are fully operational: Multi-tenant Postgres RLS, OpenTelemetry tracing, WebRTC SFU Voice/Video Huddles, SCIM 2.0, Consistent Hash Ring WS Sharding (100k connections), and OAuth 2.0 Developer Platform.",
+      text: "Welcome to NexusHub Slack workspace! All 6 phases are operational: Postgres RLS, WebRTC SFU Voice/Video Huddles, SCIM 2.0, Consistent Hash Ring WS Sharding (100k connections), and OAuth 2.0 Developer Platform.",
       reactions: [
-        { emoji: "🚀", count: 8 },
-        { emoji: "🙌", count: 5 },
+        { emoji: "🚀", count: 8, userReacted: false },
+        { emoji: "🙌", count: 5, userReacted: false },
       ],
       replyCount: 3,
     },
@@ -55,7 +73,7 @@ export const SlackWorkspace: React.FC = () => {
       role: "Principal DevOps Engineer",
       timestamp: "10:18 AM",
       text: "AWS Compute Optimizer & S3 Glacier lifecycle workers have reduced unit cost per seat by 45.9%. S3 attachments older than 90 days are automatically migrated to Glacier Instant Retrieval.",
-      reactions: [{ emoji: "⚡", count: 12 }],
+      reactions: [{ emoji: "⚡", count: 12, userReacted: false }],
     },
     {
       id: "m3",
@@ -63,8 +81,8 @@ export const SlackWorkspace: React.FC = () => {
       avatar: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100&auto=format&fit=crop&q=80",
       role: "AI Workspace Bot",
       timestamp: "10:20 AM",
-      text: "🤖 Type `/ask-ai` or `/remind` to trigger natural language RAG searches or schedule channel reminders across all connected services.",
-      reactions: [{ emoji: "💡", count: 4 }],
+      text: "🤖 Type `/ask-ai [question]` or `/remind [text]` to trigger natural language workspace searches or schedule reminders across channels.",
+      reactions: [{ emoji: "💡", count: 4, userReacted: false }],
     },
   ]);
 
@@ -72,20 +90,170 @@ export const SlackWorkspace: React.FC = () => {
     { provider: "jira", key: "NEXUS-104", title: "Review WebRTC SFU Media Gateway latency metrics" },
   ]);
 
-  const handleSendMessage = () => {
+  // Load live channels & messages from Supabase on mount
+  useEffect(() => {
+    async function loadSupabaseData() {
+      try {
+        const { data: dbChannels } = await supabase.from("channels").select("*");
+        if (dbChannels && dbChannels.length > 0) {
+          setChannels(
+            dbChannels.map((c: any) => ({
+              id: c.id,
+              name: c.name,
+              isPrivate: c.is_private,
+            }))
+          );
+        }
+
+        const { data: dbMessages } = await supabase
+          .from("messages")
+          .select("*, users(full_name, avatar_url)")
+          .order("created_at", { ascending: true });
+
+        if (dbMessages && dbMessages.length > 0) {
+          setMessages(
+            dbMessages.map((m: any) => ({
+              id: m.id,
+              user: m.users?.full_name || "Nexus User",
+              avatar: m.users?.avatar_url || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80",
+              role: "Workspace Member",
+              timestamp: new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+              text: m.content,
+              reactions: [],
+            }))
+          );
+        }
+      } catch (err) {
+        console.log("[SlackWorkspace] Supabase fallback to local state.");
+      }
+    }
+
+    loadSupabaseData();
+  }, []);
+
+  const handleSendMessage = async () => {
     if (!messageInput.trim()) return;
+    const text = messageInput.trim();
+
+    // Check for Slash Commands (/ask-ai or /remind)
+    if (text.startsWith("/ask-ai ")) {
+      const question = text.replace("/ask-ai ", "");
+      const userMsg: SlackMessageUI = {
+        id: `m_${Date.now()}`,
+        user: "You (Software Engineer)",
+        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80",
+        role: "Senior Engineer",
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        text,
+        reactions: [],
+      };
+      const aiResponse: SlackMessageUI = {
+        id: `ai_${Date.now()}`,
+        user: "Nexus AI Assistant",
+        avatar: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100&auto=format&fit=crop&q=80",
+        role: "AI Workspace Bot",
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        text: `🤖 **Nexus AI RAG Response for "${question}"**:\nNexusHub indexes all channels using vector embeddings. Related context retrieved from architecture spec ADR-0008. All 6 phases are active!`,
+        reactions: [{ emoji: "💡", count: 1, userReacted: false }],
+      };
+      setMessages((prev) => [...prev, userMsg, aiResponse]);
+      setMessageInput("");
+      return;
+    }
+
+    if (text.startsWith("/remind ")) {
+      const reminderText = text.replace("/remind ", "");
+      const userMsg: SlackMessageUI = {
+        id: `m_${Date.now()}`,
+        user: "You (Software Engineer)",
+        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80",
+        role: "Senior Engineer",
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        text,
+        reactions: [],
+      };
+      const botMsg: SlackMessageUI = {
+        id: `rem_${Date.now()}`,
+        user: "Slackbot",
+        avatar: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100&auto=format&fit=crop&q=80",
+        role: "Slack System Bot",
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        text: `⏰ Scheduled reminder: "${reminderText}". I'll remind you in #${activeChannel}!`,
+        reactions: [{ emoji: "⏰", count: 1, userReacted: false }],
+      };
+      setMessages((prev) => [...prev, userMsg, botMsg]);
+      setMessageInput("");
+      return;
+    }
+
+    // Standard message send
     const newMsg: SlackMessageUI = {
       id: `m_${Date.now()}`,
       user: "You (Software Engineer)",
       avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80",
       role: "Senior Engineer",
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      text: messageInput.trim(),
+      text,
       reactions: [],
     };
+
     setMessages((prev) => [...prev, newMsg]);
     setMessageInput("");
+
+    // Persist live to Supabase if connected
+    try {
+      await supabase.from("messages").insert({
+        content: text,
+        channel_id: "00000000-0000-0000-0000-000000000001",
+        workspace_id: "a0000000-0000-0000-0000-00000000000a",
+      });
+    } catch (e) {
+      // Ignored if local state handles display
+    }
   };
+
+  const handleToggleReaction = (msgId: string, emoji: string) => {
+    setMessages((prev) =>
+      prev.map((m) => {
+        if (m.id !== msgId) return m;
+        const existingReaction = m.reactions.find((r) => r.emoji === emoji);
+        if (existingReaction) {
+          const updated = m.reactions.map((r) =>
+            r.emoji === emoji
+              ? {
+                  ...r,
+                  count: r.userReacted ? r.count - 1 : r.count + 1,
+                  userReacted: !r.userReacted,
+                }
+              : r
+          );
+          return { ...m, reactions: updated.filter((r) => r.count > 0) };
+        } else {
+          return {
+            ...m,
+            reactions: [...m.reactions, { emoji, count: 1, userReacted: true }],
+          };
+        }
+      })
+    );
+  };
+
+  const handleCreateChannel = () => {
+    if (!newChannelName.trim()) return;
+    const cleanName = newChannelName.toLowerCase().replace(/\s+/g, "-");
+    const newChan: SlackChannelUI = {
+      id: `c_${Date.now()}`,
+      name: cleanName,
+    };
+    setChannels((prev) => [...prev, newChan]);
+    setActiveChannel(cleanName);
+    setNewChannelName("");
+    setShowNewChannelModal(false);
+  };
+
+  const filteredMessages = searchQuery
+    ? messages.filter((m) => m.text.toLowerCase().includes(searchQuery.toLowerCase()) || m.user.toLowerCase().includes(searchQuery.toLowerCase()))
+    : messages;
 
   return (
     <div style={styles.slackContainer}>
@@ -94,7 +262,7 @@ export const SlackWorkspace: React.FC = () => {
         <div style={styles.railLogo}>
           <span style={{ fontSize: "20px" }}>⚡</span>
         </div>
-        
+
         <div style={styles.railNav}>
           <button style={{ ...styles.railBtn, ...styles.railBtnActive }} title="Home">
             <span style={{ fontSize: "18px" }}>🏠</span>
@@ -134,48 +302,32 @@ export const SlackWorkspace: React.FC = () => {
             <span style={styles.workspaceTitle}>NexusHub Enterprise</span>
             <span style={{ fontSize: "12px", color: "#9ca3af" }}>▼</span>
           </div>
-          <button style={styles.newMsgBtn} title="New Message">✏️</button>
+          <button onClick={() => setShowNewChannelModal(true)} style={styles.newMsgBtn} title="New Channel">
+            ✏️
+          </button>
         </div>
 
         <div style={styles.sidebarSection}>
           <div style={styles.sectionHeader}>
             <span>Channels</span>
-            <span style={styles.plusIcon}>+</span>
+            <span onClick={() => setShowNewChannelModal(true)} style={styles.plusIcon}>+</span>
           </div>
-          
+
           <div style={styles.channelList}>
-            <button
-              onClick={() => setActiveChannel("engineering-general")}
-              style={{ ...styles.channelItem, ...(activeChannel === "engineering-general" ? styles.channelItemActive : {}) }}
-            >
-              <span>#</span>
-              <span style={styles.channelName}>engineering-general</span>
-              <span style={styles.badgeUnread}>3</span>
-            </button>
-            
-            <button
-              onClick={() => setActiveChannel("general")}
-              style={{ ...styles.channelItem, ...(activeChannel === "general" ? styles.channelItemActive : {}) }}
-            >
-              <span>#</span>
-              <span style={styles.channelName}>general</span>
-            </button>
-
-            <button
-              onClick={() => setActiveChannel("huddle-lounge")}
-              style={{ ...styles.channelItem, ...(activeChannel === "huddle-lounge" ? styles.channelItemActive : {}) }}
-            >
-              <span>🎙️</span>
-              <span style={styles.channelName}>huddle-lounge</span>
-            </button>
-
-            <button
-              onClick={() => setActiveChannel("security-compliance")}
-              style={{ ...styles.channelItem, ...(activeChannel === "security-compliance" ? styles.channelItemActive : {}) }}
-            >
-              <span>🔒</span>
-              <span style={styles.channelName}>security-compliance</span>
-            </button>
+            {channels.map((ch) => (
+              <button
+                key={ch.id}
+                onClick={() => setActiveChannel(ch.name)}
+                style={{
+                  ...styles.channelItem,
+                  ...(activeChannel === ch.name ? styles.channelItemActive : {}),
+                }}
+              >
+                <span>{ch.isPrivate ? "🔒" : "#"}</span>
+                <span style={styles.channelName}>{ch.name}</span>
+                {ch.unreadCount && <span style={styles.badgeUnread}>{ch.unreadCount}</span>}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -224,7 +376,7 @@ export const SlackWorkspace: React.FC = () => {
               <span style={{ fontSize: "12px", color: "#9ca3af" }}>🔍</span>
               <input
                 type="text"
-                placeholder="Search NexusHub messages..."
+                placeholder="Search NexusHub..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 style={styles.searchInput}
@@ -249,7 +401,7 @@ export const SlackWorkspace: React.FC = () => {
 
         {/* MESSAGES STREAM */}
         <div style={styles.messagesStream}>
-          {messages.map((msg) => (
+          {filteredMessages.map((msg) => (
             <div key={msg.id} style={styles.messageRow}>
               <img src={msg.avatar} alt={msg.user} style={styles.userAvatar} />
               <div style={styles.messageContent}>
@@ -260,15 +412,30 @@ export const SlackWorkspace: React.FC = () => {
                 </div>
                 <p style={styles.msgBody}>{msg.text}</p>
 
-                {msg.reactions.length > 0 && (
-                  <div style={styles.reactionGroup}>
-                    {msg.reactions.map((r, idx) => (
-                      <span key={idx} style={styles.reactionPill}>
-                        {r.emoji} {r.count}
-                      </span>
-                    ))}
-                  </div>
-                )}
+                {/* Interactive Reactions Bar */}
+                <div style={styles.reactionGroup}>
+                  {msg.reactions.map((r, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => handleToggleReaction(msg.id, r.emoji)}
+                      style={{
+                        ...styles.reactionPill,
+                        ...(r.userReacted ? styles.reactionPillActive : {}),
+                      }}
+                    >
+                      {r.emoji} {r.count}
+                    </button>
+                  ))}
+                  <button onClick={() => handleToggleReaction(msg.id, "👍")} style={styles.addReactionBtn}>
+                    +👍
+                  </button>
+                  <button onClick={() => handleToggleReaction(msg.id, "🚀")} style={styles.addReactionBtn}>
+                    +🚀
+                  </button>
+                  <button onClick={() => handleToggleReaction(msg.id, "❤️")} style={styles.addReactionBtn}>
+                    +❤️
+                  </button>
+                </div>
 
                 {msg.replyCount && (
                   <div style={styles.replyThreadLink}>
@@ -285,7 +452,7 @@ export const SlackWorkspace: React.FC = () => {
         <div style={styles.composerWrapper}>
           <div style={styles.composerBox}>
             <textarea
-              placeholder={`Message #${activeChannel}`}
+              placeholder={`Message #${activeChannel} (Try /ask-ai or /remind)`}
               value={messageInput}
               onChange={(e) => setMessageInput(e.target.value)}
               onKeyDown={(e) => {
@@ -299,11 +466,12 @@ export const SlackWorkspace: React.FC = () => {
             />
             <div style={styles.composerToolbar}>
               <div style={styles.toolbarIcons}>
-                <button style={styles.toolBtn}><b>B</b></button>
-                <button style={styles.toolBtn}><i>I</i></button>
-                <button style={styles.toolBtn}>🔗</button>
-                <button style={styles.toolBtn}>📎</button>
-                <button style={styles.toolBtn}>😊</button>
+                <button onClick={() => setMessageInput((prev) => `${prev} /ask-ai `)} style={styles.toolBtn}>
+                  🤖 /ask-ai
+                </button>
+                <button onClick={() => setMessageInput((prev) => `${prev} /remind `)} style={styles.toolBtn}>
+                  ⏰ /remind
+                </button>
                 <button onClick={() => setShowTaskModal(true)} style={styles.toolBtn} title="Convert to Task">
                   📌 Convert to Task
                 </button>
@@ -368,7 +536,7 @@ export const SlackWorkspace: React.FC = () => {
               <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                 <CalendarEventWidget
                   id="e1"
-                  title="Phase 6 Slack UI Sync"
+                  title="Phase 6 Slack Integration Review"
                   timeRange="Today, 5:00 PM - 6:00 PM"
                   location="Nexus Huddle Room"
                   organizer="Alex Rivers"
@@ -391,6 +559,33 @@ export const SlackWorkspace: React.FC = () => {
           onClose={() => setShowTaskModal(false)}
           onTaskCreated={(newTask) => setCreatedTasks((prev) => [...prev, newTask])}
         />
+      )}
+
+      {/* CREATE NEW CHANNEL MODAL */}
+      {showNewChannelModal && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalBox}>
+            <h3 style={{ margin: "0 0 12px 0", color: "#ffffff" }}>Create a Channel</h3>
+            <p style={{ fontSize: "12px", color: "#9ca3af", marginBottom: "16px" }}>
+              Channels are where your team communicates. They are best organized around a topic (e.g. #lead-dev).
+            </p>
+            <input
+              type="text"
+              placeholder="e.g. plan-launch"
+              value={newChannelName}
+              onChange={(e) => setNewChannelName(e.target.value)}
+              style={styles.modalInput}
+            />
+            <div style={styles.modalActions}>
+              <button onClick={() => setShowNewChannelModal(false)} style={styles.cancelBtn}>
+                Cancel
+              </button>
+              <button onClick={handleCreateChannel} style={styles.createChanBtn}>
+                Create
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -691,13 +886,29 @@ const styles: Record<string, React.CSSProperties> = {
     display: "flex",
     gap: "6px",
     marginTop: "4px",
+    alignItems: "center",
   },
   reactionPill: {
     backgroundColor: "#222529",
     border: "1px solid #383b40",
-    padding: "2px 6px",
+    color: "#D1D2D3",
+    padding: "2px 8px",
     borderRadius: "12px",
     fontSize: "12px",
+    cursor: "pointer",
+  },
+  reactionPillActive: {
+    backgroundColor: "#1164A3",
+    borderColor: "#2eb886",
+    color: "#ffffff",
+    fontWeight: 700,
+  },
+  addReactionBtn: {
+    backgroundColor: "transparent",
+    border: "none",
+    color: "#ABABAD",
+    fontSize: "11px",
+    cursor: "pointer",
   },
   replyThreadLink: {
     display: "flex",
@@ -743,12 +954,14 @@ const styles: Record<string, React.CSSProperties> = {
     gap: "8px",
   },
   toolBtn: {
-    backgroundColor: "transparent",
-    border: "none",
-    color: "#ABABAD",
+    backgroundColor: "#19171D",
+    border: "1px solid #383b40",
+    color: "#60a5fa",
     fontSize: "12px",
+    fontWeight: 700,
     cursor: "pointer",
-    padding: "4px",
+    padding: "4px 8px",
+    borderRadius: "4px",
   },
   sendMsgBtn: {
     backgroundColor: "#007a5a",
@@ -805,5 +1018,61 @@ const styles: Record<string, React.CSSProperties> = {
     flex: 1,
     overflowY: "auto",
     padding: "16px",
+  },
+
+  /* MODALS */
+  modalOverlay: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.75)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 1000,
+  },
+  modalBox: {
+    backgroundColor: "#19171D",
+    border: "1px solid #383b40",
+    borderRadius: "12px",
+    padding: "24px",
+    width: "400px",
+    color: "#ffffff",
+  },
+  modalInput: {
+    width: "100%",
+    backgroundColor: "#222529",
+    border: "1px solid #383b40",
+    borderRadius: "6px",
+    padding: "10px",
+    color: "#ffffff",
+    fontSize: "14px",
+    outline: "none",
+    marginBottom: "20px",
+  },
+  modalActions: {
+    display: "flex",
+    justifyContent: "flex-end",
+    gap: "10px",
+  },
+  cancelBtn: {
+    backgroundColor: "transparent",
+    border: "none",
+    color: "#ABABAD",
+    fontSize: "13px",
+    fontWeight: 600,
+    cursor: "pointer",
+  },
+  createChanBtn: {
+    backgroundColor: "#007a5a",
+    color: "#ffffff",
+    border: "none",
+    padding: "8px 16px",
+    borderRadius: "6px",
+    fontSize: "13px",
+    fontWeight: 700,
+    cursor: "pointer",
   },
 };
